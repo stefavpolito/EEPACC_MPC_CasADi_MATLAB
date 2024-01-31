@@ -1,5 +1,6 @@
 clearvars;clc;close all;
 addpath('.\casadi_3_6_3')
+addpath(genpath('.\Functions\'))
 V = SetVehicleParameters();
 
 %% General settings
