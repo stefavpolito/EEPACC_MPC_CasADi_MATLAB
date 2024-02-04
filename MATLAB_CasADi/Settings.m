@@ -96,7 +96,7 @@ OPTsettings.useFifthOrderFit_NLP = true;    % If true, the fifth order power con
 OPTsettings.FBuseTaylor = true;             % FBMPC: whether to use Taylor linearization for the dynamics and headway policy (true) or to linearize 'naively' using estimates (false)
 
 % move-blocking
-moveBlockingSettings = ones(1,20);  % [ones(1,10), 2*ones(1,10), 4*ones(1,5)];
+moveBlockingSettings = ones(1,20);          % [ones(1,10), 2*ones(1,10), 4*ones(1,5)];
 OPTsettings.N_hor    = sum(moveBlockingSettings);
 
 % estimation
@@ -106,13 +106,13 @@ OPTsettings.tConstACC_ego        = 3;       % if paramEstSetting=1, how long to 
 OPTsettings.tConstACC_tar        = 5;       % if TVestSetting=1, how long to use constant acceleration before changing to constant velocity (seconds)
 
 % plant simulation
-OPTsettings.N_integratePlant     = 10;       % number of RK4 steps for the integration step in the MPC plant simulation (u_k -> measured x_k)
+OPTsettings.N_integratePlant     = 10;      % number of RK4 steps for the integration step in the MPC plant simulation (u_k -> measured x_k)
 
 % optimization
-OPTsettings.solverToUse         = 1;       % sparse qpOASES (0), dense qpOASES (1), sparse HPIPM (2).
-OPTsettings.ABMPCmaxIterHPIPM   = 5e2;     % Maximum number of HPIPM iterations for the ABMPC
-OPTsettings.FBMPCmaxIterHPIPM   = 5e2;     % Maximum number of HPIPM iterations for the FBMPC
-OPTsettings.TVMPCmaxIterHPIPM   = 1e3;     % Maximum number of HPIPM iterations for the TVMPC
+OPTsettings.solverToUse         = 1;        % sparse qpOASES (0), dense qpOASES (1), sparse HPIPM (2).
+OPTsettings.ABMPCmaxIterHPIPM   = 5e2;      % Maximum number of HPIPM iterations for the ABMPC
+OPTsettings.FBMPCmaxIterHPIPM   = 5e2;      % Maximum number of HPIPM iterations for the FBMPC
+OPTsettings.TVMPCmaxIterHPIPM   = 1e3;      % Maximum number of HPIPM iterations for the TVMPC
 
 % variable time step length
     % TsMax = 1.5;
@@ -153,38 +153,42 @@ if OPTsettings.useCaseNum == 0
     % === section 1: urban ===
 
     % speed limits:               [max speed (km/h), initial distance (m)]
-    OPTsettings.speedLimZones   = [ 30,    0; 
-                                    50,  600;
-                                    80, 1000; 
-                                   120, 4450;
-                                   80, 10700]; 
-    
+    OPTsettings.speedLimZones   = [ 60,    0; 
+                                    50,  1000]; 
+    % OPTsettings.speedLimZones   = [ 30,    0; 
+    %                                 50,  600;
+    %                                 80, 1000; 
+    %                                120, 4450;
+    %                                80, 10700];
 
-    % curves:                     [curvature (1/m, pos -> ccw), start dist (m), end dist (m)]             
-    OPTsettings.curves          = [  -1/2, 200, 206;
-                                     -1/9, 2600, 2605;
-                                     1/17, 2605, 2650; % roundabout 1
-                                    -1/12, 2650, 2655;
-                                     -1/9, 3400, 3405; % roundabout 2
-                                     1/17, 3405, 3450;
-                                    -1/12, 3450, 3455;
-                                    -1/30, 4300, 4310; 
-                                    -1/52, 4400, 4460;
-                                    -1/75, 7900, 8253];
+    % curves:                     [curvature (1/m, pos -> ccw), start dist (m), end dist (m)]
+    OPTsettings.curves          = [];
+    % OPTsettings.curves          = [  -1/2, 200, 206;
+    %                                  -1/9, 2600, 2605;
+    %                                  1/17, 2605, 2650; % roundabout 1
+    %                                 -1/12, 2650, 2655;
+    %                                  -1/9, 3400, 3405; % roundabout 2
+    %                                  1/17, 3405, 3450;
+    %                                 -1/12, 3450, 3455;
+    %                                 -1/30, 4300, 4310; 
+    %                                 -1/52, 4400, 4460;
+    %                                 -1/75, 7900, 8253];
     
     % stops:                      [distance on route from start (m)]
-    OPTsettings.stopLoc         = [80;
-                                   450;
-                                   600;
-                                   4000; % traffic light
-                                   10700]; % traffic light
+    OPTsettings.stopLoc         = [];
+    % OPTsettings.stopLoc         = [80;
+    %                                450;
+    %                                600;
+    %                                4000; % traffic light
+    %                                10700]; % traffic light
     
     
 
     % traffic lights:             [distance on route from start (m), phase (s), red light time (s), green light time (s)]
     OPTsettings.TLLoc           = [];
 
-    OPTsettings.cutOffDist = 11.5e3;
+    OPTsettings.cutOffDist = 3.5e3;
+    % OPTsettings.cutOffDist = 11.5e3;
 
 else
     % get a predefined use case
@@ -199,7 +203,7 @@ OPTsettings.tau_min          = 0.5;          % minimum headway time             
 
 % target vehicle trajectory generation
 OPTsettings.TVlength         = 4;            % length of the target vehicle                 (m)
-OPTsettings.TVinitDist       = 30;           % initial distance of the target vehicle       (m)
+OPTsettings.TVinitDist       = 10;           % initial distance of the target vehicle       (m)
 OPTsettings.TVinitVel        = 0;            % initial velocity of the target vehicle       (m/s)
 
 OPTsettings.TV_N_hor         = 20;           % horizon length in the TVMPC

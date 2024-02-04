@@ -1,6 +1,7 @@
 clearvars;clc;close all;
 addpath('.\casadi_3_6_3')
 addpath(genpath('.\Functions\'))
+addpath(genpath('.\DrivingCycles'))
 V = SetVehicleParameters();
 
 %% General settings
@@ -23,9 +24,9 @@ createAdditionalPlots  = true;
 % whether to create gifs of the receding horizon process of the MPCs
 OPTsettings.createGifs = false;
 % whether to include a target vehicle (generated if not in use case)
-OPTsettings.IncludeTV  = false;
+OPTsettings.IncludeTV  = true;
 % whether to use the simulation time from a use case instead of the one set below
-useUseCaseTsim         = true;
+useUseCaseTsim         = false;
 
 % == use cases ==
 %  1: accelerating from standstill to 80 km/h
@@ -40,14 +41,15 @@ useUseCaseTsim         = true;
 % 10: target vehicle cutting into the lane
 % 11: long route scenario
 % 12: scenario for the video
-OPTsettings.useCaseNum = 8;
+OPTsettings.useCaseNum = 0;
 
 
 % time step and simulation time
 OPTsettings.Ts     = 0.5;    % controller sample time (s) (MUST BE a multiple of .1 seconds!)
 if ~useUseCaseTsim
     % if a custom simulation time is used
-    OPTsettings.t_sim  = 60; % total simulation time  (s)
+    % OPTsettings.t_sim  = 60; % total simulation time  (s)
+    OPTsettings.t_sim  = 435; % WLTC-city simulation time  (s)
 end
 
 %% Processing
@@ -80,7 +82,8 @@ else
     if OPTsettings.generateTVMPC
         % use an MPC to generate the target vehicle's trajectory
         fprintf ('=== GENERATING TARGET VEHICLE TRAJECTORY ===\n\n');
-        [OPTsettings.s_tv, OPTsettings.v_tv, TVbadExitMessages] = RunOpt_TVMPC(OPTsettings);
+        % [OPTsettings.s_tv, OPTsettings.v_tv, TVbadExitMessages] = RunOpt_TVMPC(OPTsettings);
+        [OPTsettings.s_tv, OPTsettings.v_tv, TVbadExitMessages] = Run_DrivingCycle(OPTsettings);
         % shift to the back of the vehicle
         OPTsettings.s_tv = OPTsettings.s_tv - OPTsettings.TVlength;
     end
@@ -286,7 +289,7 @@ plotVehicleVollowingPlots = isfield(OPTsettings,'s_tv') && (sum(OPTsettings.s_tv
 t_plot    = 0:Ts:OPTsettings.t_sim;
 t_plot_TV = t_plot;
 
-% states and control signals over time
+%% states and control signals over time
 figure()
 subplot(2,1,1)
     % distance
@@ -309,6 +312,8 @@ subplot(2,1,1)
         plot(t_plot,NLPsol.s_opt)
         lgd = [lgd,"$s$ (NLP)"];
     end
+    plot(t_plot,OPTsettings.s_tv,'k-')
+    lgd = [lgd,"$s_{tv}$ (lead)"];
     ylabel('$s$ (m)','Interpreter','Latex')
     hold on
     % velocity
@@ -330,9 +335,11 @@ subplot(2,1,1)
         plot(t_plot,NLPsol.v_opt)
         lgd = [lgd,"$v$ (NLP)"];
     end
+    plot(t_plot,OPTsettings.v_tv,'k-')
+    lgd = [lgd,"$v_{tv}$ (lead)"];
     ylabel('$v$ (m/s)','Interpreter','Latex')
     ylim([0,maxVel+2])
-    xlim([0,cutOffDist])
+    xlim([0,OPTsettings.t_sim])
     grid on
     legend(lgd,'Interpreter','Latex')
 subplot(2,1,2)
@@ -359,12 +366,12 @@ subplot(2,1,2)
     end
     grid on
     xlabel('$t$ (s)','Interpreter','Latex')
-    xlim([0,cutOffDist])
+    xlim([0,OPTsettings.t_sim])
     ylabel('$F$ (N)','Interpreter','Latex')
     legend(lgd,'Interpreter','Latex')
-sdf('LatexFigure');
+% sdf('LatexFigure');
 
-% construct plot for stops
+%% construct plot for stops
 if ~isempty(OPTsettings.stopLoc)
     for i = 1:cutOffDist
         for j = 1:length(OPTsettings.stopLoc)
@@ -417,6 +424,8 @@ subplot(3,1,1)
         end
         lgd = [lgd,"stop constraint profile"];
     end
+    plot(OPTsettings.s_tv,OPTsettings.v_tv,'k-')
+    lgd = [lgd,"$v_{tv}$ (lead)"];
     legend(lgd,'Interpreter','Latex')
     ylabel('$v$ (m/s)','Interpreter','Latex')
     ylim([0, maxVel+2])
@@ -472,9 +481,9 @@ subplot(3,1,3)
     ylabel('$E_\textrm{tot}$ (kWh)','Interpreter','Latex')
     xlim([0,cutOffDist])
     xlabel('$s$ (m)','Interpreter','Latex')
-sdf('LatexFigure');
+% sdf('LatexFigure');
 
-% Distance over time
+%% Distance over time
 figure()
 lgd = [];
 hold on
@@ -523,11 +532,11 @@ ylabel('$s$ (m)','Interpreter','Latex')
 ylim([0, cutOffDist])
 xlim([0, OPTsettings.t_sim])
 grid on
-sdf('LatexFigure');
+% sdf('LatexFigure');
 
 if createAdditionalPlots
     
-    % acceleration and jerk over time
+    %% acceleration and jerk over time
     figure()
     subplot(2,1,1)
         lgd = [];
@@ -574,9 +583,9 @@ if createAdditionalPlots
         legend(lgd,'Interpreter','Latex')
         ylabel(['$j$ (m s$^{-3}$)'],'Interpreter','Latex')
         xlabel('$t$ (s)','Interpreter','Latex')
-    sdf('LatexFigure');
+    % sdf('LatexFigure');
     
-    % Filtered acceleration and jerk over time
+    %% Filtered acceleration and jerk over time
     figure()
     filterSize = 3; % steps (should be odd)
     subplot(2,1,1)
@@ -664,12 +673,12 @@ if createAdditionalPlots
         legend(lgd,'Interpreter','Latex')
         ylabel(['$j_\textrm{avg,',num2str(round(10*filterSize*Ts)/10),' s}$ (m s$^{-3}$)'],'Interpreter','Latex')
         xlabel('$t$ (s)','Interpreter','Latex')
-    sdf('LatexFigure');
+    % sdf('LatexFigure');
     
     
     if plotVehicleVollowingPlots
         
-        % Headway distance over velocity
+        %% Headway distance over velocity
             A_hwp = 2;
             T_hwp = 2;
             G_hwp = -0.0246*T_hwp + 0.010819;
@@ -701,14 +710,14 @@ if createAdditionalPlots
         plot(v_pol,h_min,'k')
             lgd = [lgd,"minimum headway distance",];
         xlim([0, maxVel])
-        ylim([0,100])
+        ylim([0,50])
         grid on
         legend(lgd,'Interpreter','Latex')
         ylabel('$h$ (m)','Interpreter','Latex')
         xlabel('$v$ (m/s)','Interpreter','Latex')
-        sdf('LatexFigure');
+        % sdf('LatexFigure');
         
-        % Headway distance over time
+        %% Headway distance over time
         figure()
         lgd = [];
         hold on
@@ -729,13 +738,13 @@ if createAdditionalPlots
             lgd = [lgd,"NLP"];
         end
         grid on
-        ylim([0,100])
+        ylim([0,50])
         legend(lgd,'Interpreter','Latex')
         ylabel('$h$ (m)','Interpreter','Latex')
         xlabel('$t$ (s)','Interpreter','Latex')
-        sdf('LatexFigure');
+        % sdf('LatexFigure');
         
-        % Headway time over time
+        %% Headway time over time
         figure()
         lgd = [];
         hold on
@@ -759,11 +768,11 @@ if createAdditionalPlots
         legend(lgd,'Interpreter','Latex')
         ylabel('$\tau$ (s)','Interpreter','Latex')
         xlabel('$t$ (s)','Interpreter','Latex')
-        sdf('LatexFigure');
+        % sdf('LatexFigure');
     
     end
     
-    % Energy consumption over time
+    %% Energy consumption over time
     figure()
     lgd = [];
     hold on;
@@ -787,9 +796,9 @@ if createAdditionalPlots
     legend(lgd,'Interpreter','Latex')
     ylabel('$E_\textrm{cumulative}$ (kWh)','Interpreter','Latex')
     xlabel('$t$ (s)','Interpreter','Latex')
-    sdf('LatexFigure');
+    % sdf('LatexFigure');
     
-    % Energy consumption over distance
+    %% Energy consumption over distance
     figure()
     lgd = [];
     hold on;
@@ -813,9 +822,9 @@ if createAdditionalPlots
     legend(lgd,'Interpreter','Latex')
     ylabel('$E_\textrm{cumulative}$ (kWh)','Interpreter','Latex')
     xlabel('$s$ (m)','Interpreter','Latex')
-    sdf('LatexFigure');
+    % sdf('LatexFigure');
     
-    % MPC loop times
+    %% MPC loop times
     figure()
     lgd = [];
     hold on;
@@ -837,9 +846,9 @@ if createAdditionalPlots
     legend(lgd,'Interpreter','Latex')
     ylabel('$t_\textrm{loop}$ (ms)','Interpreter','Latex')
     xlabel('$k$','Interpreter','Latex')
-    sdf('LatexFigure');
+    % sdf('LatexFigure');
     
-    % MPC solving times
+    %% MPC solving times
     figure()
     lgd = [];
     hold on
@@ -861,9 +870,9 @@ if createAdditionalPlots
     legend(lgd,'Interpreter','Latex')
     ylabel('$t_\textrm{solve}$ (ms)','Interpreter','Latex')
     xlabel('$t$ (s)','Interpreter','Latex')
-    sdf('LatexFigure');
+    % sdf('LatexFigure');
     
-    % determine motor torque limits
+    %% determine motor torque limits
     rpm_max = V.omega_m_max*30/pi;
     T_m_omega = zeros(1,floor(rpm_max));
     for i = 1:floor(rpm_max)
@@ -921,11 +930,11 @@ if createAdditionalPlots
     ylim([-260,260])
     ylabel('$T$ (Nm)','Interpreter','Latex')
     xlabel('$\omega$ (rpm)','Interpreter','Latex')
-    sdf('LatexFigure');
+    % sdf('LatexFigure');
     set(effMap,'LineWidth',0.1)
     set(effMap,'LineColor',[0.65,0.65,0.65])
     
-     % get efficiency map
+    % get efficiency map
     [T_m_eff_qdr,rpm_m_eff_qdr,eta_m_fit_eff_qdr] = GetMotorEfficiency(true,OPTsettings);
     if distIndNLP > length(NLPsol.rpm_opt)
         distIndNLP = length(NLPsol.rpm_opt);
@@ -970,11 +979,11 @@ if createAdditionalPlots
     ylim([-260,260])
     ylabel('$T$ (Nm)','Interpreter','Latex')
     xlabel('$\omega$ (rpm)','Interpreter','Latex')
-    sdf('LatexFigure');
+    % sdf('LatexFigure');
     set(effMap,'LineWidth',0.1)
     set(effMap,'LineColor',[0.65,0.65,0.65])
     
-    % Acceleration constraint investigation
+    %% Acceleration constraint investigation
     figure()
     lgd = [];
     hold on
@@ -1000,9 +1009,9 @@ if createAdditionalPlots
     legend(lgd,'Interpreter','Latex')
     ylabel('$a$ (m/s$^2$)','Interpreter','Latex')
     xlabel('$v$ (m/s)','Interpreter','Latex')
-    sdf('LatexFigure');
+    % sdf('LatexFigure');
     
-    % Jerk constraint investigation
+    %% Jerk constraint investigation
     figure()
     lgd = [];
     hold on
@@ -1028,9 +1037,9 @@ if createAdditionalPlots
     legend(lgd,'Interpreter','Latex')
     ylabel('$j$ (m/s$^3$)','Interpreter','Latex')
     xlabel('$v$ (m/s)','Interpreter','Latex')
-    sdf('LatexFigure');
+    % sdf('LatexFigure');
     
-    % running costs
+    %% running costs
     figure()
     subplot(2,3,1)
         hold on
@@ -1141,6 +1150,6 @@ if createAdditionalPlots
         grid on
         ylabel('general feasibility cost','Interpreter','Latex')
         xlabel('$t$ (s)','Interpreter','Latex')
-    sdf('LatexFigure');
+    % sdf('LatexFigure');
 
 end
