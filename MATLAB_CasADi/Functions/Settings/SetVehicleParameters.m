@@ -30,6 +30,7 @@ function V = SetVehicleParameters()
     V.beta_gb     = 9.665;                      % Gearbox ratio                                 -
     V.beta_fd     = 1;                          % Final drive gearbox ratio (estimated)         -
     V.phi         = V.beta_gb*V.beta_fd/V.R_w;  % transmission ratio (motor to wheel)           -
+    
         % Battery
     V.U_N         = 353;                        % Nominal battery pack voltage                  V
     V.Q_N         = 94;                         % Nominal battery pack capacity                 V
