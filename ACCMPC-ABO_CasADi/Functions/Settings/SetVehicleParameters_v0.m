@@ -1,4 +1,4 @@
-function V = SetVehicleParameters()
+function V = SetVehicleParameters_v0()
 % SetVehicleParameters loads the vehicle parameters
 %
 %   Inputs:
