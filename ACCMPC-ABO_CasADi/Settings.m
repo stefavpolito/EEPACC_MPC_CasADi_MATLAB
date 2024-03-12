@@ -46,14 +46,14 @@ W(7) = w_f;                 % w_f: weight of slack variable for feasibility
 OPTsettings.W_FB = W;
 
 % Objective function weights: Acceleration-based MPC with FC minimization
-w_FC = 50; % 50
-w_c = 0.1; % 0.1
-w_v = 8e5; % 8e5
-w_h = 1e4; % 1e4
-w_f = 1e10; % 1e10
-wc_to_wa = 3*1e5;
-wc_to_wj = 1*1e7;
-wf_to_ws = 9e0;
+w_FC = 1; % 50
+w_c = 1; % 0.1
+w_v = 1; % 8e5
+w_h = 1; % 1e4
+w_f = 1; % 1e10
+wc_to_wa = 1; % 3*1e5
+wc_to_wj = 1; % 1*1e7
+wf_to_ws = 1; % 9e0
 W(1) = w_FC;                % w_FC: weight of the Fuel Consumption
 W(2) = w_c*wc_to_wa;        % w_a: weight of the acceleration penalty
 W(3) = w_c*wc_to_wj;        % w_j: weight of the jerk penalty
@@ -61,7 +61,7 @@ W(4) = w_v;                 % w_v: weight of the slack variable for minimum velo
 W(5) = w_h;                 % w_h: weight of slack variable for vehicle following
 W(6) = w_f*wf_to_ws;        % w_s: weight of slack variable for safety-critical feasibility
 W(7) = w_f;                 % w_f: weight of slack variable for feasibility
-OPTsettings.W_AB = 1e-3*W;
+OPTsettings.W_AB = 1*W; % 1e-3*W
 
 % Objective function weights: Baseline MPC
 W(1) = 1e2;                 % w_s : weight of the travel incentive
