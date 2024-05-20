@@ -9,11 +9,11 @@ V = SetVehicleParameters();
 % Which solutions to recalculate
 recalculateNLP   = false;
 recalculateFBMPC = false;
-recalculateABMPC = true;
+recalculateABMPC = false;
 recalculateBLMPC = false;
 
 % which solutions to plot
-plotNLP   = false;
+plotNLP   = true;
 plotFBMPC = true;
 plotABMPC = true;
 plotBLMPC = false;
